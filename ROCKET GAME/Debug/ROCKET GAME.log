@@ -1,0 +1,16 @@
+﻿  main.c
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(169,59): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(220,49): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(220,65): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(241,67): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(262,51): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(262,67): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(263,48): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(263,66): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(280,104): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(292,106): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(327,67): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(327,96): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(425,42): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+D:\ROCKET GAME\ROCKET GAME\ROCKET GAME\main.c(425,54): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+  ROCKET GAME.vcxproj -> D:\ROCKET GAME\ROCKET GAME\Debug\ROCKET GAME.exe

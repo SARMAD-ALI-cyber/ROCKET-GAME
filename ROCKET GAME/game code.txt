@@ -1,0 +1,433 @@
+
+#include <raylib.h>
+#include <raymath.h>
+#include <stdio.h>
+#include<stdlib.h>
+#include<ctype.h>
+#include<time.h>
+#include<string.h>
+#define MAX_FRAME_SPEED     15
+#define MIN_FRAME_SPEED      1
+#define Player_Max_Shoot     4
+#define Enemy_Amount         2
+//global veriables:
+const int screenWidth = 1440;
+const int screenHeight = 900;
+const int rocketspeed = 5; // speed of player rocket
+
+
+// global for pause state
+bool Paused = false;
+
+//counter-------------it is used to controll  game "FLOW"--------------------------------
+unsigned int counter = 0;
+
+
+//firing class -----------------------------------------------------------------------------------------------------------------------------------
+typedef struct Shoot {
+    Vector2 speed;
+    bool active;
+    Color color;
+    Vector2 bulletposition;
+    int lifespawn;
+    float radius;
+}Shoot;
+Shoot bullets[1000];
+//further shooting setup;
+
+
+
+
+//----------------------------------------------------------------------------------------------------------------
+//---------------------------------------------enemy--------------------------------------------------------------
+
+char  points = 0;
+typedef struct Enemy {
+    bool active;
+    Rectangle enemyframerec;     //actually our enemy is a PNG and we can't detect its collision as it is only a simple image so we draw a 
+                                                              //transparent rectangel around it to detect collision
+    Rectangle enemycollision;                                //as mentioned above
+    Vector2 enemyplanepos;                                  //vector for enemy position
+
+}Enemy;
+static Enemy enemy[Enemy_Amount] = { 0 };
+int enemyX = 300;                                          //starting position of enemy in x axis
+int enemyY = 0;                                           //starting position of enemy in y axis
+bool blue_and_red_collied;                               //boolean to detect the true or false condition of collision
+
+
+//---------------------------------------------enemy declaration end--------------------------------------------
+
+int main(void)
+{
+    // Initialization
+    //--------------------------------------------------------------------------------------
+
+    InitWindow(screenWidth, screenHeight, "SARMAD's ARENA");
+
+
+    //window icon---------------------maker--------------------
+    Image windowicon = LoadImage("windowicon.png");
+    SetWindowIcon(windowicon);
+    //-------------------------------------end of window icon maker---------------------------------------
+
+
+    InitAudioDevice();     //initializing audio device
+   // ToggleFullscreen();
+
+
+
+    //--------------------------player makers------------------------------------------------------------
+    Image player = LoadImage("rocket2.png");
+    Texture2D plane = LoadTextureFromImage(player);
+    Vector2 rocketposition = { 650.0f,750.0f };
+    //-----------------------------------end of player making-------------------------------------------
+
+
+
+    //----------------------pause maker-----------------------------------------------------------------
+    Image pausee = LoadImage("pause.png");
+    Texture2D pause = LoadTextureFromImage(pausee);
+    //--------------------end of pause logic------------------------------------------------------------
+
+
+
+
+    //------------------------------score maker-------------------------------------------------------
+    Image hits = LoadImage("score.png");
+    Texture2D score = LoadTextureFromImage(hits);
+    Vector2 scorepos = { 0,0 };                         //position for showing score
+
+
+    //-----------------------------------score maker end---------------------------------------------
+
+
+
+
+    //background sound------------------------------------------------------------------------
+    Music backmusic = LoadMusicStream("backsound.mp3");
+    PlayMusicStream(backmusic);
+    Sound jetsound = LoadSound("jetsound2.wav");                     //bullet sound
+    //background sound------------------------------------------------------------------------
+
+
+    // --------------------------background image----------------------------------------------
+    Image backimage = LoadImage("backimage.png");
+    Texture2D background = LoadTextureFromImage(backimage);
+    Vector2   backposition = { -100,0 };
+    //----------------------------FInally background loaded-----------------------------------
+
+
+
+    //---------------------------------main menu declarations and initializations----------------------------------------------
+    Image mainm = LoadImage("mainmenu.png");
+    Texture2D mainmenu = LoadTextureFromImage(mainm);
+    Vector2 menuposition = { -300,0 };
+    //-------------------------end of menu declarations-------------------------------------------------------------------------
+
+
+    //------------------------------gameover logo insert------------------------------------------------------------------------
+    Image game = LoadImage("gameover.png");
+    Texture2D gameover = LoadTextureFromImage(game);
+    //------------------------------------end of game logo insertion in code----------------------------------------------------
+
+
+
+
+
+
+
+
+
+    // ---------------------------movement in x-axis and y-axis for my rocket blue and white------------------------------------
+
+    bool movementbool=true;           //"THIS VERY IMP VARIABLE IT CONTROLS THE MAIN FLOW OF CODE"
+    int movex = 7, movey = 7;
+    //-----------------------------end of giving positions----------------------------------------------------------------------
+
+
+    //-------------------------------------------bullet logic start-------------------------------------------------------------
+    for (int i = 0; i < 1000; i++)
+    {
+        bullets[i].bulletposition.x = rocketposition.x + 50;    //this is to put bullets at the tip of rocket to give realastic look
+        bullets[i].bulletposition.y = rocketposition.y + 45;
+        bullets[i].radius = 7;
+        bullets[i].color = RED;
+        bullets[i].active = false;
+    }
+    int current_bullet = 0;                                     //this will be used in future to bring the bullets back to 0
+    //------------------------------------------------------bullet logic continues--------------------------------------------
+
+
+
+    //--------------------------------------enemy-----------------------------------------------------------------
+
+
+
+    //-------------initilize the enemy width height and speed here enemy is active so means it is alive-----------
+    for (int i = 0; i < Enemy_Amount; i++) {
+        enemy[i].enemyplanepos = (Vector2){ enemyX,enemyY };  //position of enemy plane every time it respwan but it is used in other way
+        enemy[i].enemyframerec.x = 290.0f;
+        enemy[i].enemyframerec.y = 0.0f;
+        enemy[i].active = true;
+        enemy[i].enemyframerec.width = 100;
+        enemy[i].enemyframerec.height = 152;
+    }//loop for enemy
+
+
+    //------------------------------------enemy plane------------------------------------------------------------------
+    Image redplane = LoadImage("enemy2.png");
+    Texture2D enemyplane = LoadTextureFromImage(redplane);
+    Rectangle enemy_rectangle_forwidth = { 0.0f,0.0f,(float)enemyplane.width,(float)enemyplane.height }; //actually this line usaed to cut the sprites if we have multiple frames
+    //-------------------------------------enemy plane loaded-----------------------------------------------------------
+
+    Image yourresult = LoadImage("result.png");
+    Texture2D result = LoadTextureFromImage(yourresult);
+
+    SetTargetFPS(60);         //FPS for game
+    while (!WindowShouldClose()) {
+
+
+
+
+
+
+
+
+
+
+        //begin drawing here---------------------------------
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+
+        // check to see if we need to change the pause state
+        if (IsKeyPressed(KEY_P)) {
+            Paused = !Paused;
+        }
+
+
+
+        //------------MUSIC UPDATE HERE-----------------------------------------------------------------------------------------------
+        UpdateMusicStream(backmusic);
+
+
+
+        //Main menu begining----------------------------------------------------------------------------------------------------------
+        if (counter == 0) {//menu counter start
+            DrawTexture(mainmenu, menuposition.x, menuposition.y, WHITE);
+            if (IsKeyPressed(KEY_ENTER)) {//counter increment to start the game
+                
+                counter += 1;
+            }//end of game start counter
+
+        }//menu counter end
+        //-------------------------main menu end--------------------------------------------------------------------------------------
+
+
+        //result section
+        if (counter == 2) {
+            
+            DrawTexture(background, 0, 0, WHITE);
+            DrawTexture(result, 300, 200, WHITE);
+            DrawText(TextFormat("%i", points), 620,320 , 80, PURPLE);
+            if (IsKeyPressed(KEY_W)) {
+                counter = 1;
+                movementbool == true;
+            }
+        }
+
+
+
+
+        //--------------------------here we start our game----------------------------------------------------------------------------
+
+
+        if (counter == 1) {   // counter to start game
+            DrawTexture(background, backposition.x, backposition.y, WHITE);   //draw our background
+            DrawTexture(plane, rocketposition.x, rocketposition.y, WHITE);    //draw our player
+
+
+
+
+
+
+            // only update our position if we are not paused
+            if (!Paused) {    //pause will work in such a way that it will make if()true because global variabel is false tham is i press P than paused becomes true than it comes to if and make it false so all functions are stopped:
+
+
+
+            //----------------------------------key controls------------------------------------------------------------------------
+
+                if (movementbool) {// actually this controls the movement of player untill it does not collied with enemy
+                    if (IsKeyDown(KEY_RIGHT)) {
+                        rocketposition.x += movex;
+
+                    }
+                    if (IsKeyDown(KEY_LEFT)) {
+                        rocketposition.x -= movex;
+                    }
+                    if (IsKeyDown(KEY_UP)) {
+                        rocketposition.y -= movey;
+                    }
+                    if (IsKeyDown(KEY_DOWN)) {
+                        rocketposition.y += movey;
+                    }
+                }//end of movement if
+                //-------------------------key control end----------------------------------------------------------------------------
+
+
+
+
+
+                //boarder controll----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+                //border end--------------------------------------------------------------------------------------
+                //fire controll----------------------------------------------------------------------------------------------------------------------------
+                if (movementbool) {// actually this if controls the bullents untill   plane is not   collided as above
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        if (bullets[i].bulletposition.y <= 0) {  //in upper direction y coordinates are negative
+                            bullets[i].bulletposition.y = rocketposition.y + 45;
+                            bullets[i].active = false;
+                        }
+                    }
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        if (bullets[i].active)
+                        {
+                            DrawCircle(bullets[i].bulletposition.x, bullets[i].bulletposition.y, bullets[i].radius, bullets[i].color);//draw bullet
+                            bullets[i].bulletposition.y -= GetFrameTime() * 300;//speed controll 
+                        }
+                    }
+                    if (IsKeyPressed(KEY_SPACE))
+                    {
+                        bullets[current_bullet].bulletposition.y = rocketposition.y + 45;
+                        bullets[current_bullet].bulletposition.x = rocketposition.x + 50;
+                        bullets[current_bullet].active = true;
+                        current_bullet += 1;
+                        //-------------------------------------sound-----------------------------------------------------------------------
+                        PlaySound(jetsound);
+                        if (current_bullet >= 1000)
+                        {
+                            current_bullet = 0;
+                        }
+                    }
+                }//end of movement bool
+                //-------------------------------------fire controll end----------------------------------------------------------------
+
+
+
+
+                //------------------------------------enemy------------------------------------------------------------------------------
+                Rectangle rocketcollision = { rocketposition.x,rocketposition.y,(float)plane.width,(float)plane.height }; //rectangel around player
+                for (int i = 0; i < Enemy_Amount; i++) {
+                    blue_and_red_collied = CheckCollisionRecs(rocketcollision, enemy[i].enemycollision);
+                }
+                //collisions of enemy-------------------------------------------------------------------
+                for (int i = 0; i < Enemy_Amount; i++) {
+                    enemy[i].enemycollision.x = enemy[i].enemyplanepos.x;   //it will keep enemy rectangels stick to enemy
+                    enemy[i].enemycollision.y = enemy[i].enemyplanepos.y;
+                    enemy[i].enemycollision.width = enemy[i].enemyframerec.width;
+                    enemy[i].enemycollision.height = enemy[i].enemyframerec.height;
+
+                }
+                //draw enemy--------------------------------------------
+                for (int i = 0; i < Enemy_Amount; i++) {
+                    if (enemy[i].active) {
+                        DrawTextureRec(enemyplane, enemy[i].enemyframerec, enemy[i].enemyplanepos, WHITE);
+                    }
+                }
+                //when hit------
+                if (blue_and_red_collied) {//collide controls------------------------------------------------------------
+                    DrawText("DAMN YAR", 10, 60, 20, PURPLE);
+                    DrawTexture(gameover, 500, 400, WHITE);
+                    DrawText("Press R To Go To\n       your Results", 500, 700, 40, PURPLE);
+                    movementbool = false;
+                    if (IsKeyPressed(KEY_R)) {
+                        
+                        counter=2;
+                    }
+                }//collide control end-----------------------------------------------------------------------------------
+
+
+                //enemy controll----------------------------------AI------------------------------------------------------
+                for (int i = 0; i < Enemy_Amount; i++) {
+                    if (enemy[i].active && !blue_and_red_collied) {
+                        if (rocketposition.x > enemy[i].enemyplanepos.x) {//if  playeer at right of enemy than enemy goes to right
+                            enemy[i].enemyplanepos.x += 2;
+
+
+                        }
+                        if (rocketposition.x < enemy[i].enemyplanepos.x) {//if  playeer at left of enemy than enemy goes to left
+                            enemy[i].enemyplanepos.x -= 2;
+
+                        }
+                        if (rocketposition.y > enemy[i].enemyplanepos.y) {//if  playeer at below of enemy than enemy goes to below it is because that +y means below
+                            enemy[i].enemyplanepos.y += 2;
+
+                        }
+                        if (rocketposition.y < enemy[i].enemyplanepos.y) {//if  playeer at above of enemy than enemy goes to above
+                            enemy[i].enemyplanepos.y -= 2;
+
+                        }
+                    }//if cond. for enemy---
+                }//for loop enemy
+                //dfeating enemy----------------------------------------------------
+                for (int m = 0; m < 1000; m++) {
+                    if (bullets[m].active) {
+                        for (int a = 0; a < Enemy_Amount; a++) {
+                            if (enemy[a].active && CheckCollisionCircleRec(bullets[m].bulletposition, bullets[m].radius, enemy[a].enemycollision)) {
+                                bullets[m].active = false;
+
+                                enemy[a].enemyplanepos.x = -100;
+                                points += 1;
+                            }
+                        }//2nd loop
+                    }//1st if
+                }//loop
+            //dfeat enemies--------------------------------------------------
+              
+
+            }//pause-----------------------------------------------------
+            DrawFPS(700, 0);
+            //score drawing-----------------
+            DrawText(TextFormat("%i", points), 100, 10, 25, PURPLE);
+            DrawTexture(score, scorepos.x, scorepos.y, WHITE);
+            //score drawing---------------------------
+
+
+
+
+
+            // if we are paused, draw a pause messages
+            if (Paused)
+                DrawTexture(pause, 300, 200, WHITE);
+
+
+        }//end of start game if -------$$$$$$
+
+
+
+        EndDrawing();
+    }
+    //--------------------------------------------------------------------------------------
+    UnloadTexture(background);
+    UnloadTexture(enemyplane);
+    StopMusicStream(backmusic);
+    CloseAudioDevice();
+    CloseWindow();        // Close window and OpenGL context
+    //--------------------------------------------------------------------------------------
+    return 0;
+}
+
